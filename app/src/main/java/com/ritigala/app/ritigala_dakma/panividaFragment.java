@@ -31,7 +31,7 @@ public class panividaFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         panividaRecyclerView = getActivity().findViewById(R.id.RecyclerView_fragmentPanivida);
-        panividaRecyclerView.setHasFixedSize(false);
+        panividaRecyclerView.setHasFixedSize(true);
 
         panividaRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
