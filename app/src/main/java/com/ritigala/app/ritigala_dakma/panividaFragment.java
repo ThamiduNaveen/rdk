@@ -1,6 +1,10 @@
 package com.ritigala.app.ritigala_dakma;
 
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -14,11 +18,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+
+import java.io.ByteArrayOutputStream;
 
 public class panividaFragment extends Fragment {
 
@@ -60,6 +68,42 @@ public class panividaFragment extends Fragment {
             protected void populateViewHolder(ViewHolder viewHolder, Model model, int position) {
                 viewHolder.setDetail(getActivity(),model.title,model.getImage());
             }
+
+            @Override
+            public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+                ViewHolder viewHolder = super.onCreateViewHolder(parent,viewType);
+
+                viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
+                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
+
+                        String titileSTR = title_TV.getText().toString();
+                        Drawable panividaImageDR = panivida_IV.getDrawable();
+
+                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
+
+                        Intent intent = new Intent(view.getContext(),PostDetailActivity.class);
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
+                        byte [] bytes = stream.toByteArray();
+                        intent.putExtra("image",bytes);
+                        intent.putExtra("title",titileSTR);
+                        startActivity(intent);
+
+
+                    }
+
+                    @Override
+                    public void onItemLongClick(View view, int position) {
+
+                    }
+                });
+
+                return viewHolder;
+            }
         };
 
         panividaRecyclerView.setAdapter(firebaseRecyclerAdapter);
@@ -78,6 +122,43 @@ public class panividaFragment extends Fragment {
             protected void populateViewHolder(ViewHolder viewHolder, Model model, int position) {
                 viewHolder.setDetail(getActivity(),model.title,model.getImage());
             }
+
+            @Override
+            public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+                ViewHolder viewHolder = super.onCreateViewHolder(parent,viewType);
+
+                viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
+                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
+
+                        String titileSTR = title_TV.getText().toString();
+                        Drawable panividaImageDR = panivida_IV.getDrawable();
+
+                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
+
+                        Intent intent = new Intent(view.getContext(),PostDetailActivity.class);
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
+                        byte [] bytes = stream.toByteArray();
+                        intent.putExtra("image",bytes);
+                        intent.putExtra("title",titileSTR);
+                        startActivity(intent);
+
+
+                    }
+
+                    @Override
+                    public void onItemLongClick(View view, int position) {
+
+                    }
+                });
+
+                return viewHolder;
+            }
+
         };
 
         panividaRecyclerView.setAdapter(firebaseRecyclerAdapter);
