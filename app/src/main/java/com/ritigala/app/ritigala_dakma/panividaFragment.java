@@ -22,17 +22,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class panividaFragment extends Fragment {
 
     RecyclerView panividaRecyclerView;
     FirebaseDatabase fireDB;
     DatabaseReference dRef;
+    private ArrayList<String> imagesLinks;
 
     @Nullable
     @Override
@@ -52,6 +58,27 @@ public class panividaFragment extends Fragment {
 
         fireDB = FirebaseDatabase.getInstance();
         dRef = fireDB.getReference("Data");
+
+        dRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Is better to use a List, because you don't know the size
+                // of the iterator returned by dataSnapshot.getChildren() to
+                // initialize the array
+                imagesLinks = new ArrayList<String>();
+
+                for (DataSnapshot imageSnapshot: dataSnapshot.getChildren()) {
+                    String imagesLink = imageSnapshot.child("image").getValue(String.class);
+                    imagesLinks.add(imagesLink);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
     }
 
@@ -77,20 +104,23 @@ public class panividaFragment extends Fragment {
                 viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
-                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
-
-                        String titileSTR = title_TV.getText().toString();
-                        Drawable panividaImageDR = panivida_IV.getDrawable();
-
-                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
+//                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
+//                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
+//
+//                        String titileSTR = title_TV.getText().toString();
+//                        Drawable panividaImageDR = panivida_IV.getDrawable();
+//
+//                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
 
                         Intent intent = new Intent(view.getContext(),PostDetailActivity.class);
-                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
-                        byte [] bytes = stream.toByteArray();
-                        intent.putExtra("image",bytes);
-                        intent.putExtra("title",titileSTR);
+//                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
+//                        byte [] bytes = stream.toByteArray();
+
+
+//                        intent.putExtra("image",bytes);
+//                        intent.putExtra("title",titileSTR);
+                        intent.putExtra("imageLinks",imagesLinks);
                         startActivity(intent);
 
 
@@ -131,21 +161,26 @@ public class panividaFragment extends Fragment {
                 viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
-                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
-
-                        String titileSTR = title_TV.getText().toString();
-                        Drawable panividaImageDR = panivida_IV.getDrawable();
-
-                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
+                        //                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
+//                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
+//
+//                        String titileSTR = title_TV.getText().toString();
+//                        Drawable panividaImageDR = panivida_IV.getDrawable();
+//
+//                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
 
                         Intent intent = new Intent(view.getContext(),PostDetailActivity.class);
-                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
-                        byte [] bytes = stream.toByteArray();
-                        intent.putExtra("image",bytes);
-                        intent.putExtra("title",titileSTR);
+//                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
+//                        byte [] bytes = stream.toByteArray();
+
+
+//                        intent.putExtra("image",bytes);
+//                        intent.putExtra("title",titileSTR);
+                        intent.putExtra("imageLinks",imagesLinks);
+                        intent.putExtra("position",2);
                         startActivity(intent);
+
 
 
                     }
