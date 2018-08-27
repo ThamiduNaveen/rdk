@@ -1,7 +1,10 @@
 package com.ritigala.app.ritigala_dakma;
 
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -9,6 +12,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -20,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DataSnapshot;
@@ -40,6 +45,9 @@ public class panividaFragment extends Fragment {
     DatabaseReference dRef;
     private ArrayList<String> imagesLinks;
 
+    LinearLayoutManager panividaLinearLayoutManager;
+    SharedPreferences panividaSharedPreferences;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -54,10 +62,26 @@ public class panividaFragment extends Fragment {
         panividaRecyclerView = getActivity().findViewById(R.id.RecyclerView_fragmentPanivida);
         panividaRecyclerView.setHasFixedSize(true);
 
-        panividaRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        panividaRecyclerView.setLayoutManager(panividaLinearLayoutManager);
 
         fireDB = FirebaseDatabase.getInstance();
         dRef = fireDB.getReference("Data");
+        dRef.keepSynced(true);
+
+        panividaSharedPreferences = getActivity().getSharedPreferences("SortSettings", Context.MODE_PRIVATE);
+        String panividaSorting = panividaSharedPreferences.getString("Sort","Newest");
+
+        if(panividaSorting.equals("Newest")){
+            panividaLinearLayoutManager = new LinearLayoutManager(getActivity());
+            panividaLinearLayoutManager.setReverseLayout(true);
+            panividaLinearLayoutManager.setStackFromEnd(true);
+        }else if(panividaSorting.equals("Oldest")){
+            panividaLinearLayoutManager = new LinearLayoutManager(getActivity());
+            panividaLinearLayoutManager.setReverseLayout(false);
+            panividaLinearLayoutManager.setStackFromEnd(false);
+        }
+
+        panividaRecyclerView.setLayoutManager(panividaLinearLayoutManager);
 
         dRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -79,6 +103,8 @@ public class panividaFragment extends Fragment {
 
             }
         });
+
+
 
     }
 
@@ -119,7 +145,9 @@ public class panividaFragment extends Fragment {
 
 
 //                        intent.putExtra("image",bytes);
-//                        intent.putExtra("title",titileSTR);
+                        intent.putExtra("title","1");
+                        intent.putExtra("search",false);
+                        intent.putExtra("position",position);
                         intent.putExtra("imageLinks",imagesLinks);
                         startActivity(intent);
 
@@ -161,10 +189,10 @@ public class panividaFragment extends Fragment {
                 viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        //                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
+                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
 //                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
 //
-//                        String titileSTR = title_TV.getText().toString();
+                        String titileSTR = title_TV.getText().toString();
 //                        Drawable panividaImageDR = panivida_IV.getDrawable();
 //
 //                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
@@ -176,9 +204,10 @@ public class panividaFragment extends Fragment {
 
 
 //                        intent.putExtra("image",bytes);
-//                        intent.putExtra("title",titileSTR);
+                        intent.putExtra("title",titileSTR);
                         intent.putExtra("imageLinks",imagesLinks);
-                        intent.putExtra("position",2);
+                        intent.putExtra("search",true);
+                        intent.putExtra("position",position);
                         startActivity(intent);
 
 
@@ -222,5 +251,48 @@ public class panividaFragment extends Fragment {
         });
 
         super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.sort) {
+
+            showSortDialog();
+            return true;
+        }
+
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showSortDialog() {
+        String sortOptions [] ={"Newest","Oldest"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Sort by")
+                .setIcon(R.drawable.ic_action_sort)
+                .setItems(sortOptions, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if(i==0){
+
+                            SharedPreferences.Editor editor = panividaSharedPreferences.edit();
+                            editor.putString("Sort","Newest");
+                            editor.apply();
+                            getActivity().recreate();
+
+                        }else if(i==1){
+                            SharedPreferences.Editor editor = panividaSharedPreferences.edit();
+                            editor.putString("Sort","Oldest");
+                            editor.apply();
+                            getActivity().recreate();
+
+                        }
+                    }
+                });
+        builder.show();
+
     }
 }

@@ -8,10 +8,14 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.github.chrisbanes.photoview.PhotoView;
@@ -21,7 +25,7 @@ import java.util.ArrayList;
 
 public class PostDetailActivity extends AppCompatActivity {
 
-    TextView titleTW ;
+    TextView titleTW;
     PhotoView panividaIV;
     private ViewPager viewPager;
     private PostSliderAdapter myadapter;
@@ -35,9 +39,9 @@ public class PostDetailActivity extends AppCompatActivity {
 //        FullScreencall();
         setContentView(R.layout.post_detail_container);
 
-         Toolbar toolbar = (Toolbar) findViewById(R.id.postDetailBar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.postDetailBar);
 
-         setSupportActionBar(toolbar);
+        setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Panivida detail");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
@@ -55,15 +59,28 @@ public class PostDetailActivity extends AppCompatActivity {
 //        panividaIV.setImageBitmap(bmp);
 //        titleTW.setText(titleSTR);
 
-        ArrayList<String> imagesLinks=getIntent().getStringArrayListExtra("imageLinks");
-        int position = getIntent().getIntExtra("position",0);
+        ArrayList<String> imagesLinks = getIntent().getStringArrayListExtra("imageLinks");
+        int position = getIntent().getIntExtra("position", 0);
+        boolean searchStatus = getIntent().getBooleanExtra("search", false);
         viewPager = (ViewPager) findViewById(R.id.viewpager_postDetails);
-        myadapter = new PostSliderAdapter(this,imagesLinks);
-
+        myadapter = new PostSliderAdapter(this, imagesLinks);
         viewPager.setAdapter(myadapter);
-        viewPager.setCurrentItem(position);
-
-
+        if (searchStatus) {
+            String titleSTR = getIntent().getStringExtra("title");
+            int pos = titleSTR.indexOf(" ");
+            if (pos == 1) {
+                titleSTR = titleSTR.substring(0, 1);
+            } else if (pos == 2) {
+                titleSTR = titleSTR.substring(0, 2);
+            } else if (pos == 3) {
+                titleSTR = titleSTR.substring(0, 3);
+            } else {
+                titleSTR = "1";
+            }
+            viewPager.setCurrentItem(Integer.parseInt(titleSTR) - 1);
+        } else {
+            viewPager.setCurrentItem(position);
+        }
 
 
     }
@@ -73,20 +90,46 @@ public class PostDetailActivity extends AppCompatActivity {
         onBackPressed();
         return true;
     }
-    @Override   protected void onResume() {
+
+    @Override
+    protected void onResume() {
         super.onResume();
         //FullScreencall();
     }
 
-    public void FullScreencall() {
-        if (Build.VERSION.SDK_INT < 19) {
-            View v = this.getWindow().getDecorView();
-            v.setSystemUiVisibility(View.GONE);
-        } else {
-            View decorView = getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            decorView.setSystemUiVisibility(uiOptions);
-        }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_post_detail_activity, menu);
+        return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.postDetail_save:
+                Toast.makeText(this, "S", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.postDetail_share:
+                Toast.makeText(this, "Sh", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+
+    }
+
+    //    public void FullScreencall() {
+//        if (Build.VERSION.SDK_INT < 19) {
+//            View v = this.getWindow().getDecorView();
+//            v.setSystemUiVisibility(View.GONE);
+//        } else {
+//            View decorView = getWindow().getDecorView();
+//            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+//            decorView.setSystemUiVisibility(uiOptions);
+//        }
+//    }
+
 
 }
