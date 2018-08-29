@@ -1,8 +1,14 @@
 package com.ritigala.app.ritigala_dakma;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -14,13 +20,24 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.Manifest;
 
 
 import com.github.chrisbanes.photoview.PhotoView;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 
 public class PostDetailActivity extends AppCompatActivity {
@@ -29,10 +46,18 @@ public class PostDetailActivity extends AppCompatActivity {
     PhotoView panividaIV;
     private ViewPager viewPager;
     private PostSliderAdapter myadapter;
+    private int positionInLink;
+    ImageView downImg;
+
+    private static final int WRITE_EXTERNAL_STO_CODE = 1;
+    Bitmap panividaBMP;
+    ArrayList<String> imagesLinks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        downImg = new ImageView(this);
 
 //        requestWindowFeature(Window.FEATURE_NO_TITLE);
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -46,21 +71,22 @@ public class PostDetailActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 //
-//        panividaIV = (PhotoView) findViewById(R.id.imageView_postDetails);
+//       panividaIV = (PhotoView) findViewById(R.id.imageView_postDetails);
 //
 //
 //        titleTW = (TextView) findViewById(R.id.textView_postDetails);
 //
 //        byte [] bytes = getIntent().getByteArrayExtra("image");
-//        String titleSTR = getIntent().getStringExtra("title");
 //
 //        Bitmap bmp = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
 //
 //        panividaIV.setImageBitmap(bmp);
 //        titleTW.setText(titleSTR);
 
-        ArrayList<String> imagesLinks = getIntent().getStringArrayListExtra("imageLinks");
-        int position = getIntent().getIntExtra("position", 0);
+
+
+        imagesLinks = getIntent().getStringArrayListExtra("imageLinks");
+        positionInLink = getIntent().getIntExtra("position", 0);
         boolean searchStatus = getIntent().getBooleanExtra("search", false);
         viewPager = (ViewPager) findViewById(R.id.viewpager_postDetails);
         myadapter = new PostSliderAdapter(this, imagesLinks);
@@ -77,11 +103,11 @@ public class PostDetailActivity extends AppCompatActivity {
             } else {
                 titleSTR = "1";
             }
-            viewPager.setCurrentItem(Integer.parseInt(titleSTR) - 1);
+            positionInLink=Integer.parseInt(titleSTR) - 1;
+            viewPager.setCurrentItem(positionInLink);
         } else {
-            viewPager.setCurrentItem(position);
+            viewPager.setCurrentItem(positionInLink);
         }
-
 
     }
 
@@ -108,16 +134,113 @@ public class PostDetailActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.postDetail_save:
-                Toast.makeText(this, "S", Toast.LENGTH_SHORT).show();
+
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                    if(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)== PackageManager.PERMISSION_DENIED){
+                        String [] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                        requestPermissions(permission,WRITE_EXTERNAL_STO_CODE);
+                    }else{
+                        saveImage();
+                    }
+                }
+                else {
+                    saveImage();
+                }
+
                 return true;
             case R.id.postDetail_share:
-                Toast.makeText(this, "Sh", Toast.LENGTH_SHORT).show();
+                ShareImage();
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
 
         }
 
+    }
+
+    private void ShareImage() {
+
+        Picasso.get().load(imagesLinks.get(viewPager.getCurrentItem())).into(downImg);
+
+        try {
+            panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
+
+            try{
+
+                File file = new File(getExternalCacheDir(),"sample.png");
+                FileOutputStream fOut = new FileOutputStream(file);
+                panividaBMP.compress(Bitmap.CompressFormat.PNG,100,fOut);
+                fOut.flush();
+                fOut.close();
+                file.setReadable(true,false);
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra(Intent.EXTRA_TEXT,"ritigala dakma "+(viewPager.getCurrentItem()+1));
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                intent.setType("image/png");
+                startActivity(Intent.createChooser(intent,"Share via "));
+
+
+
+            }catch (Exception e){
+
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        }
+        catch (Exception e){
+            Toast.makeText(this, "Check your internet connection", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+
+    private void saveImage() {
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis());
+        File path = Environment.getExternalStorageDirectory();
+        File dir = new File(path+"/Download/Ritigala_dekma");
+        dir.mkdirs();
+        String imgName = timeStamp+".PNG";
+        File file = new File(dir,imgName);
+        OutputStream output;
+
+
+        Picasso.get().load(imagesLinks.get(viewPager.getCurrentItem())).into(downImg);
+        try {
+            panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
+            try{
+                output = new FileOutputStream(file);
+                panividaBMP.compress(Bitmap.CompressFormat.PNG,100,output);
+                output.flush();
+                output.close();
+                Toast.makeText(this, imgName+" saved to"+dir, Toast.LENGTH_SHORT).show();
+
+
+            }catch (Exception e){
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+
+            }
+        }
+        catch (Exception e){
+            Toast.makeText(this, "Check your internet connection", Toast.LENGTH_SHORT).show();
+        }
+
+
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case WRITE_EXTERNAL_STO_CODE:
+                if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+                    saveImage();
+                }else {
+                    Toast.makeText(this, "Enable permission to save image", Toast.LENGTH_SHORT).show();
+                }
+        }
     }
 
     //    public void FullScreencall() {
