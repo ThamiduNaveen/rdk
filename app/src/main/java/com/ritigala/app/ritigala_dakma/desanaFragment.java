@@ -11,16 +11,23 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 
 public class desanaFragment extends Fragment {
 
     RecyclerView desanaRecyclerView;
     FirebaseDatabase fireDB;
     DatabaseReference dRef;
+    private ArrayList<String> desanaLinks;
 
     //LinearLayoutManager desanaLinearLayoutManager;
 
@@ -46,6 +53,27 @@ public class desanaFragment extends Fragment {
         dRef = fireDB.getReference("desana_audio");
         dRef.keepSynced(true);
 
+        dRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Is better to use a List, because you don't know the size
+                // of the iterator returned by dataSnapshot.getChildren() to
+                // initialize the array
+                desanaLinks = new ArrayList<String>();
+
+                for (DataSnapshot desanaSnapshot: dataSnapshot.getChildren()) {
+                    String desanaLink = desanaSnapshot.child("link").getValue(String.class);
+                    desanaLinks.add(desanaLink);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
     }
 
     @Override
@@ -60,7 +88,7 @@ public class desanaFragment extends Fragment {
         ) {
             @Override
             protected void populateViewHolder(ViewHolderDesana viewHolder, ModelDesana model, int position) {
-                viewHolder.setDetail(getActivity(),model.title);
+                viewHolder.setDetail(getActivity(),model.title,model.description);
 
             }
 
@@ -73,6 +101,16 @@ public class desanaFragment extends Fragment {
                     public void onItemClick(View view, int position) {
 
                         Intent intent = new Intent(view.getContext(),desanaActivity.class);
+
+                        TextView title_TV = view.findViewById(R.id.textView_one_desana);
+                        String titileSTR = title_TV.getText().toString();
+                        intent.putExtra("title",titileSTR);
+
+                        TextView description_TV = view.findViewById(R.id.textView_one_desana_description);
+                        String descriptionSTR = description_TV.getText().toString();
+                        intent.putExtra("description",descriptionSTR);
+
+                        intent.putExtra("desanaLink",desanaLinks.get(position));
                         startActivity(intent);
 
                     }

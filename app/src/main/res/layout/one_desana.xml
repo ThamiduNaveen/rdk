@@ -5,7 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:cardCornerRadius="5dp"
     app:cardElevation="3dp"
-    app:contentPadding="5dp"
+    app:contentPadding="3dp"
     app:cardUseCompatPadding="true"
     android:background="#fff">
 
@@ -22,6 +22,22 @@
             android:textAlignment="textStart"
             android:textColor="#000"
             android:textSize="18sp"
+            android:padding="5dp"/>
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="?android:attr/listDivider" />
+
+        <TextView
+            android:id="@+id/textView_one_desana_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="discription by firebase"
+            android:textAlignment="textStart"
+            android:textColor="#000"
+            android:textSize="14sp"
             android:padding="5dp"/>
     </LinearLayout>
 

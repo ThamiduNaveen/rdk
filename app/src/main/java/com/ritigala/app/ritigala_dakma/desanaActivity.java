@@ -3,9 +3,19 @@ package com.ritigala.app.ritigala_dakma;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -14,9 +24,15 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.Manifest;
+
+import java.io.File;
+import java.util.concurrent.TimeUnit;
+
 public class desanaActivity extends AppCompatActivity {
 
     DownloadManager dm;
+    DownloadManager.Request request;
     long quid;
     Button downBT;
     private static final int WRITE_EXTERNAL_STO_CODE = 1;
@@ -28,7 +44,11 @@ public class desanaActivity extends AppCompatActivity {
     private boolean filePrepared = false;
     int totalTimeInt;
 
+    private String desanaSTR;
+
     private ProgressDialog loadingBar;
+
+
 
 
     @Override
@@ -36,12 +56,22 @@ public class desanaActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_desana);
 
+        final String titleSTR = getIntent().getStringExtra("title");
+        String descriptionSTR = getIntent().getStringExtra("description");
+
+        TextView titleTV = (TextView)findViewById(R.id.textView_desana_title);
+        titleTV.setText(titleSTR);
+        TextView descriptionTV = (TextView)findViewById(R.id.textView_desana_description);
+        descriptionTV.setText(descriptionSTR);
+
+        desanaSTR = getIntent().getStringExtra("desanaLink");
+
 
         posbar = (SeekBar) findViewById(R.id.skBar_desana);
         currentTime = (TextView) findViewById(R.id.current_time_desana);
         totalTime = (TextView) findViewById(R.id.total_time_desana);
         playBT = (Button) findViewById(R.id.button_desana_play);
-        downBT = (Button) findViewById(R.id.button_test_down);
+        downBT = (Button) findViewById(R.id.button_down);
 
         mp = new MediaPlayer();
 
@@ -62,11 +92,10 @@ public class desanaActivity extends AppCompatActivity {
                         mp.pause();
                         playBT.setBackgroundResource(R.drawable.ic_action_play);
                     }
-
                 }else {
 
                     try {
-                        mp.setDataSource("https://firebasestorage.googleapis.com/v0/b/ritigala-dakma-29931.appspot.com/o/desana_audio%2F1%20GAHALAHA%2CBAWANA%20WEDASATHANA.mp3?alt=media&token=879781d8-3407-441f-9fe3-50795aaf748d");
+                        mp.setDataSource(desanaSTR);
                         loadingBar.setTitle("Loading");
                         loadingBar.setMessage("Please wait wile loading");
                         loadingBar.show();
@@ -132,15 +161,80 @@ public class desanaActivity extends AppCompatActivity {
             }
         }).start();
 
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+                    DownloadManager.Query req_qur = new DownloadManager.Query();
+                    req_qur.setFilterById(quid);
+                    Cursor c = dm.query(req_qur);
+                    if (c.moveToFirst()) {
+                        int columIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
+
+                        if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columIndex)) {
+                            Toast.makeText(context, "SUC", Toast.LENGTH_SHORT).show();
+                            downBT.setText("DOWN COM");
+                        }
+                    }
+                }
+            }
+        };
+
+        registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        downBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dm = (DownloadManager)getSystemService(DOWNLOAD_SERVICE);
+                request = new DownloadManager.Request(Uri.parse(desanaSTR));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                        String[] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                        requestPermissions(permission, WRITE_EXTERNAL_STO_CODE);
+                    } else {
+                        File path = Environment.getExternalStorageDirectory();
+                        File dir = new File(path + "/Ritigala_dekma");
+                        if (!dir.exists()) {
+                            dir.mkdirs();
+                        }
+                        request.setTitle("desana.mp3")
+                                .setDestinationInExternalPublicDir("/Ritigala_dekma", "des.mp3");
+                        quid = dm.enqueue(request);
+
+                    }
+                } else {
+                    File path = Environment.getExternalStorageDirectory();
+                    File dir = new File(path + "/Ritigala_dekma");
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    request.setTitle("desana.mp3")
+                            .setDestinationInExternalPublicDir("/Ritigala_dekma", "des.mp3");
+                    quid = dm.enqueue(request);
+
+                }
+
+
+
+            }
+        });
+
+
 
 
     }
 
-    private String makeTime(int millis){
-        int sec = millis/1000;
-        int min = sec/60;
-        int secShow = sec % 60;
-        return String.valueOf(min)+":"+String.valueOf(secShow);
+    @SuppressLint("DefaultLocale")
+    private String makeTime(long millis){
+//        int sec = millis/1000;
+//        int min = sec/60;
+//        int secShow = sec % 60;
+//
+//        return String.valueOf(min)+":"+String.valueOf(secShow);
+        return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis),
+                TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
+                TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
+
 
     }
 
@@ -164,248 +258,27 @@ public class desanaActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case WRITE_EXTERNAL_STO_CODE:
+                if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+
+                    File path = Environment.getExternalStorageDirectory();
+                    File dir = new File(path + "/Ritigala_dekma");
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    request.setTitle("desana.mp3")
+                            .setDestinationInExternalPublicDir("/Ritigala_dekma", "des.mp3");
+                    quid = dm.enqueue(request);
+
+                }else {
+                    Toast.makeText(this, "Enable permission to save image", Toast.LENGTH_SHORT).show();
+                }
+        }
+    }
+
 
 }
 
-
-/*
-
-    /////////////////////
-
-    DownloadManager dm;
-    long quid;
-    Button downBT, downPBT;
-    private static final int WRITE_EXTERNAL_STO_CODE = 1;
-
-
-    ////////////////////////
-
-    Button playBT;
-    SeekBar posbar;
-    MediaPlayer mp;
-    MediaPlayer mp2;
-    TextView start, end;
-    int totalTime;
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_desana, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        posbar = (SeekBar) getActivity().findViewById(R.id.skBar);
-        start = (TextView) getActivity().findViewById(R.id.start);
-        end = (TextView) getActivity().findViewById(R.id.end);
-        playBT = (Button) getActivity().findViewById(R.id.button_test_play);
-
-        mp = new MediaPlayer();
-        mp2 = new MediaPlayer();
-
-
-        ///////////////////////////
-        BroadcastReceiver receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-                    DownloadManager.Query req_qur = new DownloadManager.Query();
-                    req_qur.setFilterById(quid);
-                    Cursor c = dm.query(req_qur);
-                    if (c.moveToFirst()) {
-                        int columIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
-
-                        if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columIndex)) {
-                            Toast.makeText(context, "SUC", Toast.LENGTH_SHORT).show();
-                            downBT.setText("DOWN COM");
-                        }
-                    }
-                }
-            }
-        };
-
-        getActivity().registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-
-
-        downBT = (Button) getActivity().findViewById(R.id.button_test_down);
-        downBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dm = (DownloadManager) getActivity().getSystemService(getActivity().DOWNLOAD_SERVICE);
-                DownloadManager.Request request = new DownloadManager.Request(Uri.parse("https://firebasestorage.googleapis.com/v0/b/ritigala-dakma-29931.appspot.com/o/1%20GAHALAHA%2CBAWANA%20WEDASATHANA.mp3?alt=media&token=a153b533-a8a7-43d1-865f-a26c39318419"));
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (getActivity().checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-                        String[] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
-                        requestPermissions(permission, WRITE_EXTERNAL_STO_CODE);
-                    } else {
-                        File path = Environment.getExternalStorageDirectory();
-                        File dir = new File(path + "/Download/Ritigala_dekma");
-                        dir.mkdirs();
-                    }
-                } else {
-                    File path = Environment.getExternalStorageDirectory();
-                    File dir = new File(path + "/Download/Ritigala_dekma");
-                    dir.mkdirs();
-
-                }
-                request.setTitle("desana.mp3")
-                        .setDestinationInExternalPublicDir("/Download/Ritigala_dekma", "des.mp3");
-                quid = dm.enqueue(request);
-
-
-            }
-        });
-
-        downPBT = (Button) getActivity().findViewById(R.id.button_test_playFromDown);
-        downPBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-
-                    mp2.setDataSource(Environment.getExternalStorageDirectory()+"/Download/Ritigala_dekma/des.mp3");
-                    mp2.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                        @Override
-                        public void onPrepared(MediaPlayer mediaPlayer) {
-                            Toast.makeText(getActivity(), "prepared", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    mp2.prepare();
-                    mp2.setLooping(true);
-                    mp2.seekTo(0);
-                    mp2.start();
-                } catch (Exception e) {
-                    Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-
-            }
-        });
-
-        ////////////////////////////
-
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-
-                    mp.setDataSource("https://firebasestorage.googleapis.com/v0/b/ritigala-dakma-29931.appspot.com/o/1%20GAHALAHA%2CBAWANA%20WEDASATHANA.mp3?alt=media&token=a153b533-a8a7-43d1-865f-a26c39318419");
-                    mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                        @Override
-                        public void onPrepared(MediaPlayer mediaPlayer) {
-                            Toast.makeText(getActivity(), "prepared", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    mp.prepare();
-                    mp.setLooping(true);
-                    mp.seekTo(0);
-                    totalTime = mp.getDuration();
-                    posbar.setMax(totalTime);
-
-                } catch (Exception e) {
-                    Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-                //TODO your background code
-
-            }
-        });
-
-
-        playBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!mp.isPlaying()) {
-                    mp.start();
-                    playBT.setText("Pause");
-                } else {
-                    mp.pause();
-                    playBT.setText("Play");
-                }
-
-            }
-        });
-
-        posbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if (b) {
-                    mp.seekTo(i);
-                    posbar.setProgress(i);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (mp != null) {
-                    try {
-                        Message msg = new Message();
-                        msg.what = mp.getCurrentPosition();
-                        handler.sendMessage(msg);
-                        Thread.sleep(1000);
-
-                    } catch (InterruptedException e) {
-
-                    }
-                }
-            }
-        }).start();
-
-    }
-/////////////////
-
-
-    /////////////////
-
-    @SuppressLint("HandlerLeak")
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            int currentPos = msg.what;
-            posbar.setProgress(currentPos);
-            //start.setText(currentPos/1000);
-        }
-    };
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mp.isPlaying()) {
-            mp.pause();
-            playBT.setText("Play");
-        }
-
-    }
-
-//    public void play_song(){
-//
-//        final MediaPlayer mp = new MediaPlayer();
-//        try{
-//
-//            mp.setDataSource("https://firebasestorage.googleapis.com/v0/b/ritigala-dakma-29931.appspot.com/o/1%20GAHALAHA%2CBAWANA%20WEDASATHANA.mp3?alt=media&token=a153b533-a8a7-43d1-865f-a26c39318419");
-//            mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-//                @Override
-//                public void onPrepared(MediaPlayer mediaPlayer) {
-//                    mp.start();
-//                }
-//            });
-//            mp.prepare();
-//        }catch (Exception e){
-//            Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
-//        }
-//
-//    }
-
-*/

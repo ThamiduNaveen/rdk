@@ -4,58 +4,135 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".desanaActivity">
+    tools:context=".desanaActivity"
+    android:background="#f3cebe">
 
-    <Button
-        android:id="@+id/button_desana_play"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_above="@+id/skBar_desana"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="-50dp"
-        android:layout_marginEnd="76dp"
-        android:background="@drawable/ic_action_play"
-        />
-
-    <SeekBar
-        android:id="@+id/skBar_desana"
-        android:layout_width="264dp"
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp" />
+        app:cardCornerRadius="5dp"
+        app:cardElevation="3dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="3dp">
 
-    <TextView
-        android:id="@+id/current_time_desana"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/skBar_desana"
-        android:layout_toStartOf="@+id/skBar_desana"
-        android:text="0:00" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/total_time_desana"
-        android:layout_alignTop="@+id/skBar_desana"
-        android:layout_toEndOf="@+id/skBar_desana"
-        android:text="0:00" />
+            <TextView
+                android:id="@+id/textView_desana_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Title"
+                android:textAlignment="textStart"
+                android:textColor="#000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/button_test_down"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_alignEnd="@+id/total_time_desana"
-        android:layout_alignTop="@+id/button_desana_play"
-        android:background="@drawable/ic_action_download" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?android:attr/listDivider" />
 
-    <TextView
-        android:id="@+id/desana_title"
-        android:layout_width="236dp"
-        android:layout_height="38dp"
-        android:layout_alignStart="@+id/current_time_desana"
-        android:layout_alignTop="@+id/button_desana_play"
-        android:text="Desana 1"
-        android:textSize="18sp" />
+            <TextView
+                android:id="@+id/textView_desana_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="discription by firebase"
+                android:textAlignment="textStart"
+                android:textColor="#000"
+                android:textSize="14sp"
+                android:textStyle="italic" />
+
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="match_parent"
+                android:layout_height="350dp"
+                app:srcCompat="@drawable/desana" />
+
+            <SeekBar
+                android:id="@+id/skBar_desana"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/current_time_desana"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:padding="2dp"
+                    android:text="00:00:00" />
+
+
+                <TextView
+                    android:id="@+id/total_time_desana"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_gravity="end"
+                    android:padding="2dp"
+                    android:text="00:00:00" />
+
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="5dp"
+                android:background="?android:attr/listDivider"
+                android:padding="2dp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent">
+
+                <Button
+                    android:id="@+id/button_desana_play"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerInParent="true"
+                    android:background="@drawable/ic_action_play" />
+
+
+                <Button
+                    android:id="@+id/button_down"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginEnd="13dp"
+                    android:background="@drawable/ic_action_download"
+                    android:padding="5dp" />
+
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/textView_desana_downloatStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:padding="2dp"
+                android:text="Download" />
+
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+
+
+
+
+
 
 </RelativeLayout>

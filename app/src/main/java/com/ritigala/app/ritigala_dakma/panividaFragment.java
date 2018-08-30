@@ -130,21 +130,9 @@ public class panividaFragment extends Fragment {
                 viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-//                        TextView title_TV = view.findViewById(R.id.textView_one_panivida);
-//                        ImageView panivida_IV = view.findViewById(R.id.imageView_one_panivida);
-//
-//                        String titileSTR = title_TV.getText().toString();
-//                        Drawable panividaImageDR = panivida_IV.getDrawable();
-//
-//                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
+
 
                         Intent intent = new Intent(view.getContext(),PostDetailActivity.class);
-//                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
-//                        byte [] bytes = stream.toByteArray();
-
-
-//                        intent.putExtra("image",bytes);
                         intent.putExtra("title","1");
                         intent.putExtra("search",false);
                         intent.putExtra("position",position);

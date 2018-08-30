@@ -30,10 +30,12 @@ public class ViewHolderDesana extends RecyclerView.ViewHolder{
         });
 
     }
-    public void setDetail(Context ctx, String title){
+    public void setDetail(Context ctx, String title,String description){
 
         TextView titleTV = (TextView) mView.findViewById(R.id.textView_one_desana);
         titleTV.setText(title);
+        TextView descriptionTV = (TextView) mView.findViewById(R.id.textView_one_desana_description);
+        descriptionTV.setText(description);
 
     }
 

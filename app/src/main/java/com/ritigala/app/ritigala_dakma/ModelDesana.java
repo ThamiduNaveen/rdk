@@ -2,7 +2,7 @@ package com.ritigala.app.ritigala_dakma;
 
 public class ModelDesana {
 
-    String title;
+    String title,description;
     public ModelDesana(){}
 
     public String getTitle() {
@@ -13,4 +13,11 @@ public class ModelDesana {
         this.title = title;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

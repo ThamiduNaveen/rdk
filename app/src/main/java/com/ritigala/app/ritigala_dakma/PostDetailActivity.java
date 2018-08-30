@@ -200,8 +200,11 @@ public class PostDetailActivity extends AppCompatActivity {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis());
         File path = Environment.getExternalStorageDirectory();
-        File dir = new File(path+"/Download/Ritigala_dekma");
-        dir.mkdirs();
+        File dir = new File(path+"/Ritigala_dekma");
+
+        if (!dir.exists()){
+            dir.mkdir();
+        }
         String imgName = timeStamp+".PNG";
         File file = new File(dir,imgName);
         OutputStream output;
