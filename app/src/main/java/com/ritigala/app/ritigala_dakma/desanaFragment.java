@@ -110,6 +110,8 @@ public class desanaFragment extends Fragment {
                         String descriptionSTR = description_TV.getText().toString();
                         intent.putExtra("description",descriptionSTR);
 
+                        intent.putExtra("position",position);
+
                         intent.putExtra("desanaLink",desanaLinks.get(position));
                         startActivity(intent);
 

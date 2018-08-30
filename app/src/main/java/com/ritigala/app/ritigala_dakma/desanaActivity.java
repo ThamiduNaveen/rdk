@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
@@ -48,6 +49,16 @@ public class desanaActivity extends AppCompatActivity {
 
     private ProgressDialog loadingBar;
 
+    String titleSTR;
+
+    private int positionOfdesana;
+
+    SharedPreferences desanaSharedPreferences;
+
+    boolean isDownloaded;
+
+
+
 
 
 
@@ -56,13 +67,20 @@ public class desanaActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_desana);
 
-        final String titleSTR = getIntent().getStringExtra("title");
+        desanaSharedPreferences = getSharedPreferences("desanaData", Context.MODE_PRIVATE);
+        final Boolean firstTime = desanaSharedPreferences.getBoolean("FirstTime",true);
+
+        titleSTR = getIntent().getStringExtra("title");
         String descriptionSTR = getIntent().getStringExtra("description");
+
+        positionOfdesana = getIntent().getIntExtra("position",0);
 
         TextView titleTV = (TextView)findViewById(R.id.textView_desana_title);
         titleTV.setText(titleSTR);
         TextView descriptionTV = (TextView)findViewById(R.id.textView_desana_description);
         descriptionTV.setText(descriptionSTR);
+
+        final TextView downStatusTV = (TextView) findViewById(R.id.textView_desana_downloatStatus);
 
         desanaSTR = getIntent().getStringExtra("desanaLink");
 
@@ -80,6 +98,17 @@ public class desanaActivity extends AppCompatActivity {
         posbar.setMax(100000);
         posbar.setProgress(1);
 
+        if(!firstTime) {
+            File path = Environment.getExternalStorageDirectory();
+            File dir = new File(path + "/Ritigala_dekma/" + titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3");
+            if (dir.exists()) {
+                isDownloaded = true;
+                downBT.setBackgroundResource(R.drawable.ic_check_circle_black_24dp);
+                downStatusTV.setText("Downloaded");
+
+            }
+        }
+
         playBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,12 +122,15 @@ public class desanaActivity extends AppCompatActivity {
                         playBT.setBackgroundResource(R.drawable.ic_action_play);
                     }
                 }else {
-
+                    loadingBar.setTitle("Loading");
+                    loadingBar.setMessage("Please wait wile loading");
+                    loadingBar.show();
                     try {
-                        mp.setDataSource(desanaSTR);
-                        loadingBar.setTitle("Loading");
-                        loadingBar.setMessage("Please wait wile loading");
-                        loadingBar.show();
+                        if(!isDownloaded){
+                            mp.setDataSource(desanaSTR);
+                        }else{
+                            mp.setDataSource(Environment.getExternalStorageDirectory()+"/Ritigala_dekma/" + titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3");
+                        }
                         mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                             @Override
                             public void onPrepared(MediaPlayer mediaPlayer) {
@@ -110,6 +142,7 @@ public class desanaActivity extends AppCompatActivity {
                                 mp.start();
                                 playBT.setBackgroundResource(R.drawable.ic_action_pause);
                                 totalTime.setText(makeTime(totalTimeInt));
+                                Toast.makeText(desanaActivity.this, "Prepared", Toast.LENGTH_SHORT).show();
                                 loadingBar.dismiss();
                             }
                         });
@@ -173,8 +206,13 @@ public class desanaActivity extends AppCompatActivity {
                         int columIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
 
                         if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columIndex)) {
-                            Toast.makeText(context, "SUC", Toast.LENGTH_SHORT).show();
-                            downBT.setText("DOWN COM");
+                            Toast.makeText(context, "File successfully downloaded", Toast.LENGTH_SHORT).show();
+                            downBT.setBackgroundResource(R.drawable.ic_check_circle_black_24dp);
+                            downStatusTV.setText("Downloaded");
+                            isDownloaded = true;
+
+                        }else{
+                            Toast.makeText(context, "Error while downloading try again", Toast.LENGTH_LONG).show();
                         }
                     }
                 }
@@ -185,37 +223,44 @@ public class desanaActivity extends AppCompatActivity {
         downBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                dm = (DownloadManager)getSystemService(DOWNLOAD_SERVICE);
-                request = new DownloadManager.Request(Uri.parse(desanaSTR));
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-                        String[] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
-                        requestPermissions(permission, WRITE_EXTERNAL_STO_CODE);
+                if (!isDownloaded) {
+                    if (firstTime) {
+                        SharedPreferences.Editor editor = desanaSharedPreferences.edit();
+                        editor.putBoolean("FirstTime", false);
+                        editor.apply();
+                    }
+
+                    dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                    request = new DownloadManager.Request(Uri.parse(desanaSTR));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                            String[] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                            requestPermissions(permission, WRITE_EXTERNAL_STO_CODE);
+                        } else {
+                            File path = Environment.getExternalStorageDirectory();
+                            File dir = new File(path + "/Ritigala_dekma");
+                            if (!dir.exists()) {
+                                dir.mkdirs();
+                            }
+                            request.setTitle(titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3")
+                                    .setDestinationInExternalPublicDir("/Ritigala_dekma", titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3");
+                            quid = dm.enqueue(request);
+
+                        }
                     } else {
                         File path = Environment.getExternalStorageDirectory();
                         File dir = new File(path + "/Ritigala_dekma");
                         if (!dir.exists()) {
                             dir.mkdirs();
                         }
-                        request.setTitle("desana.mp3")
-                                .setDestinationInExternalPublicDir("/Ritigala_dekma", "des.mp3");
+                        request.setTitle(titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3")
+                                .setDestinationInExternalPublicDir("/Ritigala_dekma", titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3");
                         quid = dm.enqueue(request);
 
                     }
-                } else {
-                    File path = Environment.getExternalStorageDirectory();
-                    File dir = new File(path + "/Ritigala_dekma");
-                    if (!dir.exists()) {
-                        dir.mkdirs();
-                    }
-                    request.setTitle("desana.mp3")
-                            .setDestinationInExternalPublicDir("/Ritigala_dekma", "des.mp3");
-                    quid = dm.enqueue(request);
+
 
                 }
-
-
-
             }
         });
 
@@ -226,11 +271,6 @@ public class desanaActivity extends AppCompatActivity {
 
     @SuppressLint("DefaultLocale")
     private String makeTime(long millis){
-//        int sec = millis/1000;
-//        int min = sec/60;
-//        int secShow = sec % 60;
-//
-//        return String.valueOf(min)+":"+String.valueOf(secShow);
         return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis),
                 TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
                 TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
@@ -269,8 +309,8 @@ public class desanaActivity extends AppCompatActivity {
                     if (!dir.exists()) {
                         dir.mkdirs();
                     }
-                    request.setTitle("desana.mp3")
-                            .setDestinationInExternalPublicDir("/Ritigala_dekma", "des.mp3");
+                    request.setTitle(titleSTR+"_"+String.valueOf(positionOfdesana)+".mp3")
+                            .setDestinationInExternalPublicDir("/Ritigala_dekma", titleSTR+"_"+String.valueOf(positionOfdesana)+".mp3");
                     quid = dm.enqueue(request);
 
                 }else {
