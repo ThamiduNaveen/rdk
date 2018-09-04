@@ -52,6 +52,7 @@ public class PostDetailActivity extends AppCompatActivity {
     private static final int WRITE_EXTERNAL_STO_CODE = 1;
     Bitmap panividaBMP;
     ArrayList<String> imagesLinks;
+    ArrayList<String> titles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,10 +87,11 @@ public class PostDetailActivity extends AppCompatActivity {
 
 
         imagesLinks = getIntent().getStringArrayListExtra("imageLinks");
+        titles = getIntent().getStringArrayListExtra("titles");
         positionInLink = getIntent().getIntExtra("position", 0);
         boolean searchStatus = getIntent().getBooleanExtra("search", false);
         viewPager = (ViewPager) findViewById(R.id.viewpager_postDetails);
-        myadapter = new PostSliderAdapter(this, imagesLinks);
+        myadapter = new PostSliderAdapter(this, imagesLinks,titles);
         viewPager.setAdapter(myadapter);
         if (searchStatus) {
             String titleSTR = getIntent().getStringExtra("title");

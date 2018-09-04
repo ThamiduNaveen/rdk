@@ -11,6 +11,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -122,31 +124,49 @@ public class desanaActivity extends AppCompatActivity {
                         playBT.setBackgroundResource(R.drawable.ic_action_play);
                     }
                 }else {
-                    loadingBar.setTitle("Loading");
-                    loadingBar.setMessage("Please wait wile loading");
-                    loadingBar.show();
                     try {
                         if(!isDownloaded){
-                            mp.setDataSource(desanaSTR);
-                        }else{
-                            mp.setDataSource(Environment.getExternalStorageDirectory()+"/Ritigala_dekma/" + titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3");
-                        }
-                        mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                            @Override
-                            public void onPrepared(MediaPlayer mediaPlayer) {
-                                filePrepared = true;
-                                mp.setLooping(true);
-                                mp.seekTo(0);
-                                totalTimeInt = mp.getDuration();
-                                posbar.setMax(totalTimeInt);
-                                mp.start();
-                                playBT.setBackgroundResource(R.drawable.ic_action_pause);
-                                totalTime.setText(makeTime(totalTimeInt));
-                                Toast.makeText(desanaActivity.this, "Prepared", Toast.LENGTH_SHORT).show();
+                            loadingBar.setTitle("Loading");
+                            loadingBar.setMessage("Please wait wile loading");
+                            loadingBar.show();
+                            if(checkConnection()) {
+                                mp.setDataSource(desanaSTR);
+                                mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                    @Override
+                                    public void onPrepared(MediaPlayer mediaPlayer) {
+                                        filePrepared = true;
+                                        mp.setLooping(true);
+                                        mp.seekTo(0);
+                                        totalTimeInt = mp.getDuration();
+                                        posbar.setMax(totalTimeInt);
+                                        mp.start();
+                                        playBT.setBackgroundResource(R.drawable.ic_action_pause);
+                                        totalTime.setText(makeTime(totalTimeInt));
+                                        loadingBar.dismiss();
+                                    }
+                                });
+                                mp.prepareAsync();
+                            }else{
                                 loadingBar.dismiss();
                             }
-                        });
-                        mp.prepare();
+                        }else{
+                            mp.setDataSource(Environment.getExternalStorageDirectory()+"/Ritigala_dekma/" + titleSTR + "_" + String.valueOf(positionOfdesana) + ".mp3");
+                            mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                @Override
+                                public void onPrepared(MediaPlayer mediaPlayer) {
+                                    filePrepared = true;
+                                    mp.setLooping(true);
+                                    mp.seekTo(0);
+                                    totalTimeInt = mp.getDuration();
+                                    posbar.setMax(totalTimeInt);
+                                    mp.start();
+                                    playBT.setBackgroundResource(R.drawable.ic_action_pause);
+                                    totalTime.setText(makeTime(totalTimeInt));
+                                }
+                            });
+                            mp.prepareAsync();
+                        }
+
 
                     } catch (Exception e) {
                         Toast.makeText(desanaActivity.this,"Error"+e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -223,7 +243,7 @@ public class desanaActivity extends AppCompatActivity {
         downBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!isDownloaded) {
+                if (!isDownloaded && checkConnection()) {
                     if (firstTime) {
                         SharedPreferences.Editor editor = desanaSharedPreferences.edit();
                         editor.putBoolean("FirstTime", false);
@@ -316,6 +336,23 @@ public class desanaActivity extends AppCompatActivity {
                 }else {
                     Toast.makeText(this, "Enable permission to save image", Toast.LENGTH_SHORT).show();
                 }
+        }
+    }
+
+    private boolean checkConnection(){
+        ConnectivityManager ConnectionManager=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo=ConnectionManager.getActiveNetworkInfo();
+        if(networkInfo != null && networkInfo.isConnected() )
+        {
+            return true;
+
+        }
+        else
+        {
+
+            Toast.makeText(desanaActivity.this, "Check your Internet connection", Toast.LENGTH_LONG).show();
+            return false;
+
         }
     }
 

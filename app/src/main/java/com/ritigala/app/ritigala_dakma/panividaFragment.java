@@ -44,9 +44,12 @@ public class panividaFragment extends Fragment {
     FirebaseDatabase fireDB;
     DatabaseReference dRef;
     private ArrayList<String> imagesLinks;
+    private ArrayList<String> titles;
+    private ArrayList<String> complexPanivida;
 
     LinearLayoutManager panividaLinearLayoutManager;
     SharedPreferences panividaSharedPreferences;
+
 
     @Nullable
     @Override
@@ -67,6 +70,14 @@ public class panividaFragment extends Fragment {
         fireDB = FirebaseDatabase.getInstance();
         dRef = fireDB.getReference("Data");
         dRef.keepSynced(true);
+
+//        for(int i =6;i<10;i++){
+//            dRef.child("0"+String.valueOf(i)).child("image").setValue("1");
+//            dRef.child("0"+String.valueOf(i)).child("title").setValue(String.valueOf(i)+" රිටිගලින් පණිවිඩයක්");
+//        }
+
+
+
 
         panividaSharedPreferences = getActivity().getSharedPreferences("SortSettings", Context.MODE_PRIVATE);
         String panividaSorting = panividaSharedPreferences.getString("Sort","Newest");
@@ -90,10 +101,16 @@ public class panividaFragment extends Fragment {
                 // of the iterator returned by dataSnapshot.getChildren() to
                 // initialize the array
                 imagesLinks = new ArrayList<String>();
-
-                for (DataSnapshot imageSnapshot: dataSnapshot.getChildren()) {
-                    String imagesLink = imageSnapshot.child("image").getValue(String.class);
+                titles = new ArrayList<String>();
+                complexPanivida=new ArrayList<String>();
+                for (DataSnapshot childSnapshot: dataSnapshot.getChildren()) {
+                    String imagesLink = childSnapshot.child("image").getValue(String.class);
                     imagesLinks.add(imagesLink);
+                    String title_one = childSnapshot.child("title").getValue(String.class);
+                    titles.add(title_one);
+                    if(childSnapshot.hasChild("images")){
+                        complexPanivida.add(childSnapshot.child("title").getValue().toString());
+                    }
                 }
 
             }
@@ -119,7 +136,7 @@ public class panividaFragment extends Fragment {
         ) {
             @Override
             protected void populateViewHolder(ViewHolder viewHolder, Model model, int position) {
-                viewHolder.setDetail(getActivity(),model.title,model.getImage());
+                viewHolder.setDetail(getActivity(),model.title,model.getImage(), complexPanivida);
             }
 
             @Override
@@ -137,6 +154,7 @@ public class panividaFragment extends Fragment {
                         intent.putExtra("search",false);
                         intent.putExtra("position",position);
                         intent.putExtra("imageLinks",imagesLinks);
+                        intent.putExtra("titles",titles);
                         startActivity(intent);
 
 
@@ -166,7 +184,7 @@ public class panividaFragment extends Fragment {
         ) {
             @Override
             protected void populateViewHolder(ViewHolder viewHolder, Model model, int position) {
-                viewHolder.setDetail(getActivity(),model.title,model.getImage());
+                viewHolder.setDetail(getActivity(),model.title,model.getImage(),complexPanivida);
             }
 
             @Override
@@ -196,6 +214,7 @@ public class panividaFragment extends Fragment {
                         intent.putExtra("imageLinks",imagesLinks);
                         intent.putExtra("search",true);
                         intent.putExtra("position",position);
+                        intent.putExtra("titles",titles);
                         startActivity(intent);
 
 
