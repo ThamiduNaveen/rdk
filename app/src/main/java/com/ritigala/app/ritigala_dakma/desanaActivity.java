@@ -59,11 +59,7 @@ public class desanaActivity extends AppCompatActivity {
 
     boolean isDownloaded;
 
-
-
-
-
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
