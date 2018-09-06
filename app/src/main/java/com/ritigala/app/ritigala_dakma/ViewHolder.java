@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class ViewHolder extends RecyclerView.ViewHolder{
 
@@ -47,14 +48,14 @@ public class ViewHolder extends RecyclerView.ViewHolder{
         });
 
     }
-    public void setDetail(final Context ctx, final String title, String image,ArrayList<String> complexPanivida){
+    public void setDetail(final Context ctx, final String title, String image,Map<String,ArrayList<String>> complexPanividaMap){
 
         TextView titleTV = (TextView) mView.findViewById(R.id.textView_one_panivida);
         TextView extraDetailsTV = (TextView) mView.findViewById(R.id.textView_one_panivida_moreImages);
         final ImageView imageIV = (ImageView) mView.findViewById(R.id.imageView_one_panivida);
         titleTV.setText(title);
         extraDetailsTV.setVisibility(View.GONE);
-        if(complexPanivida.contains(title)){
+        if(complexPanividaMap.containsKey(title)){
             extraDetailsTV.setText("මෙම පණිවිඩයේ  සියලු කොටස්  කියවිඉමට පණිවිඩය මත touch කරන්න.");
             extraDetailsTV.setVisibility(View.VISIBLE);
         }

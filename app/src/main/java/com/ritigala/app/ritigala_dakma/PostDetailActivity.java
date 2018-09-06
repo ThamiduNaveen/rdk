@@ -37,13 +37,13 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 
 
 public class PostDetailActivity extends AppCompatActivity {
 
-    TextView titleTW;
-    PhotoView panividaIV;
+
     private ViewPager viewPager;
     private PostSliderAdapter myadapter;
     private int positionInLink;
@@ -85,13 +85,15 @@ public class PostDetailActivity extends AppCompatActivity {
 //        titleTW.setText(titleSTR);
 
 
-
         imagesLinks = getIntent().getStringArrayListExtra("imageLinks");
         titles = getIntent().getStringArrayListExtra("titles");
         positionInLink = getIntent().getIntExtra("position", 0);
         boolean searchStatus = getIntent().getBooleanExtra("search", false);
+
+        HashMap<String, ArrayList<String>> complexPanividaImagesHashMap = (HashMap<String, ArrayList<String>>) getIntent().getSerializableExtra("complexPanividaImagesHashMap");
+
         viewPager = (ViewPager) findViewById(R.id.viewpager_postDetails);
-        myadapter = new PostSliderAdapter(this, imagesLinks,titles);
+        myadapter = new PostSliderAdapter(this, imagesLinks, titles, complexPanividaImagesHashMap);
         viewPager.setAdapter(myadapter);
         if (searchStatus) {
             String titleSTR = getIntent().getStringExtra("title");
@@ -105,7 +107,7 @@ public class PostDetailActivity extends AppCompatActivity {
             } else {
                 titleSTR = "1";
             }
-            positionInLink=Integer.parseInt(titleSTR) - 1;
+            positionInLink = Integer.parseInt(titleSTR) - 1;
             viewPager.setCurrentItem(positionInLink);
         } else {
             viewPager.setCurrentItem(positionInLink);
@@ -137,15 +139,14 @@ public class PostDetailActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.postDetail_save:
 
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                    if(checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)== PackageManager.PERMISSION_DENIED){
-                        String [] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
-                        requestPermissions(permission,WRITE_EXTERNAL_STO_CODE);
-                    }else{
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                        String[] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                        requestPermissions(permission, WRITE_EXTERNAL_STO_CODE);
+                    } else {
                         saveImage();
                     }
-                }
-                else {
+                } else {
                     saveImage();
                 }
 
@@ -168,30 +169,28 @@ public class PostDetailActivity extends AppCompatActivity {
         try {
             panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
 
-            try{
+            try {
 
-                File file = new File(getExternalCacheDir(),"sample.png");
+                File file = new File(getExternalCacheDir(), "sample.png");
                 FileOutputStream fOut = new FileOutputStream(file);
-                panividaBMP.compress(Bitmap.CompressFormat.PNG,100,fOut);
+                panividaBMP.compress(Bitmap.CompressFormat.PNG, 100, fOut);
                 fOut.flush();
                 fOut.close();
-                file.setReadable(true,false);
+                file.setReadable(true, false);
                 Intent intent = new Intent(Intent.ACTION_SEND);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.putExtra(Intent.EXTRA_TEXT,"ritigala dakma "+(viewPager.getCurrentItem()+1));
+                intent.putExtra(Intent.EXTRA_TEXT, "ritigala dakma " + (viewPager.getCurrentItem() + 1));
                 intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
                 intent.setType("image/png");
-                startActivity(Intent.createChooser(intent,"Share via "));
+                startActivity(Intent.createChooser(intent, "Share via "));
 
 
-
-            }catch (Exception e){
+            } catch (Exception e) {
 
                 Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
 
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Toast.makeText(this, "Check your internet connection", Toast.LENGTH_SHORT).show();
         }
 
@@ -202,47 +201,45 @@ public class PostDetailActivity extends AppCompatActivity {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis());
         File path = Environment.getExternalStorageDirectory();
-        File dir = new File(path+"/Ritigala_dekma");
+        File dir = new File(path + "/Ritigala_dekma");
 
-        if (!dir.exists()){
+        if (!dir.exists()) {
             dir.mkdir();
         }
-        String imgName = timeStamp+".PNG";
-        File file = new File(dir,imgName);
+        String imgName = timeStamp + ".PNG";
+        File file = new File(dir, imgName);
         OutputStream output;
 
 
         Picasso.get().load(imagesLinks.get(viewPager.getCurrentItem())).into(downImg);
         try {
             panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
-            try{
+            try {
                 output = new FileOutputStream(file);
-                panividaBMP.compress(Bitmap.CompressFormat.PNG,100,output);
+                panividaBMP.compress(Bitmap.CompressFormat.PNG, 100, output);
                 output.flush();
                 output.close();
-                Toast.makeText(this, imgName+" saved to"+dir, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, imgName + " saved to" + dir, Toast.LENGTH_SHORT).show();
 
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
 
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Toast.makeText(this, "Check your internet connection", Toast.LENGTH_SHORT).show();
         }
-
 
 
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
+        switch (requestCode) {
             case WRITE_EXTERNAL_STO_CODE:
-                if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     saveImage();
-                }else {
+                } else {
                     Toast.makeText(this, "Enable permission to save image", Toast.LENGTH_SHORT).show();
                 }
         }

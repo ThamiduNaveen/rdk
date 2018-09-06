@@ -2,7 +2,6 @@ package com.ritigala.app.ritigala_dakma;
 
 import android.content.Context;
 import android.content.ContextWrapper;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Callback;
@@ -26,24 +24,21 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class PostSliderAdapter extends PagerAdapter {
+public class ExtendedPostSliderAdapter extends PagerAdapter {
 
     Context context;
     LayoutInflater inflater;
     private ArrayList<String> imagesLinks;
-    private ArrayList<String> titles;
-    private HashMap<String, ArrayList<String>> complexPanividaImagesHashMap;
+    private String title;
 
     SharedPreferences imageSharedPreferences;
 
 
-    public PostSliderAdapter(Context context, ArrayList<String> imagesLinks, ArrayList<String> titles, HashMap<String, ArrayList<String>> complexPanividaImagesHashMap) {
+    public ExtendedPostSliderAdapter(Context context, ArrayList<String> imagesLinks, String title) {
         this.context = context;
         this.imagesLinks = imagesLinks;
-        this.titles = titles;
-        this.complexPanividaImagesHashMap = complexPanividaImagesHashMap;
+        this.title = title;
 
     }
 
@@ -59,41 +54,22 @@ public class PostSliderAdapter extends PagerAdapter {
     }
 
     @Override
-    public Object instantiateItem(ViewGroup container, final int position) {
+    public Object instantiateItem(ViewGroup container, int position) {
+
         inflater = (LayoutInflater) context.getSystemService(context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.activity_post_detail, container, false);
-        ImageView imgslide = (ImageView) view.findViewById(R.id.imageView_postDetails);
-
-        TextView extraDetailsTV = (TextView) view.findViewById(R.id.textView_post_details_moreImages);
-        extraDetailsTV.setVisibility(View.GONE);
-
-        if(complexPanividaImagesHashMap.keySet().contains(titles.get(position))){
-            extraDetailsTV.setText("මෙම පණිවිඩයේ  සියලු කොටස්  කියවිඉමට පණිවිඩය මත touch කරන්න.");
-            extraDetailsTV.setVisibility(View.VISIBLE);
-            imgslide.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(view.getContext(), extendedPanividaActivity.class);
-                    intent.putExtra("complexPanividaImages", complexPanividaImagesHashMap.get(titles.get(position)));
-                    intent.putExtra("title", titles.get(position));
-                    context.startActivity(intent);
-                }
-            });
-
-        }
-
+        View view = inflater.inflate(R.layout.extended_panivida_sliding, container, false);
+        ImageView imgslide = (ImageView) view.findViewById(R.id.imageView_panvidaExtended);
 
         imageSharedPreferences = context.getSharedPreferences("ImagePaths", Context.MODE_PRIVATE);
-        String imagePath = imageSharedPreferences.getString(titles.get(position), "error");
+        String imagePath = imageSharedPreferences.getString(title + String.valueOf(position), "error");
 
-
-        if (!imagePath.equals("error")) {
-            boolean error = loadImageFromStorage(imagePath, imgslide, titles.get(position), context);
-            if (error) {
-                LoadImageFromPicasso(imagesLinks.get(position), imgslide, titles.get(position), context);
+        if(!imagePath.equals("error")){
+            boolean error = loadImageFromStorage(imagePath,imgslide,title,context,position);
+            if(error){
+                LoadImageFromPicasso(imagesLinks.get(position),imgslide,title,position,context);
             }
-        } else {
-            LoadImageFromPicasso(imagesLinks.get(position), imgslide, titles.get(position), context);
+        }else{
+            LoadImageFromPicasso(imagesLinks.get(position),imgslide,title,position,context);
         }
 
         container.addView(view);
@@ -105,14 +81,14 @@ public class PostSliderAdapter extends PagerAdapter {
         container.removeView((LinearLayout) object);
     }
 
-    private void LoadImageFromPicasso(String image, final ImageView imageIV, final String title, final Context ctx) {
+    private void LoadImageFromPicasso(String image, final ImageView imageIV, final String title, final int position, final Context ctx) {
         Picasso.get().load(image).into(imageIV, new Callback() {
             @Override
             public void onSuccess() {
                 Bitmap panividaBMP = ((BitmapDrawable) imageIV.getDrawable()).getBitmap();
-                String path = saveToInternalStorage(panividaBMP, ctx, title);
+                String path = saveToInternalStorage(panividaBMP, ctx, title, position);
                 SharedPreferences.Editor editor = imageSharedPreferences.edit();
-                editor.putString(title, path);
+                editor.putString(title + String.valueOf(position), path);
                 editor.apply();
 
             }
@@ -124,12 +100,12 @@ public class PostSliderAdapter extends PagerAdapter {
         });
     }
 
-    private String saveToInternalStorage(Bitmap bitmapImage, Context ctx, String title) {
+    private String saveToInternalStorage(Bitmap bitmapImage, Context ctx, String title, int position) {
         ContextWrapper cw = new ContextWrapper(ctx);
         // path to /data/data/yourapp/app_data/imageDir
         File directory = cw.getDir("panividaDir", Context.MODE_PRIVATE);
         // Create imageDir
-        File mypath = new File(directory, title + ".png");
+        File mypath = new File(directory, title + String.valueOf(position) + ".png");
         boolean status = false;
 
         FileOutputStream fos = null;
@@ -157,10 +133,10 @@ public class PostSliderAdapter extends PagerAdapter {
         }
     }
 
-    private boolean loadImageFromStorage(String path, ImageView img, String title, Context ctx) {
+    private boolean loadImageFromStorage(String path, ImageView img, String title, Context ctx,int position) {
 
         try {
-            File f = new File(path, title + ".png");
+            File f = new File(path, title+String.valueOf(position) + ".png");
             Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
             img.setImageBitmap(b);
             //Toast.makeText(ctx, "Loaded from saved", Toast.LENGTH_SHORT).show();

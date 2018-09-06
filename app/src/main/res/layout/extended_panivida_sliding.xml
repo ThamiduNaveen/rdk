@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".PostDetailActivity"
-    android:id="@+id/slide_layout">
+    tools:context=".extendedPanividaActivity"
+    android:id="@+id/slide_layout_panivida">
 
 
 
@@ -18,26 +18,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textView_post_details_moreImages"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textColor="@color/colorPrimaryDark"
-            android:textSize="16sp"
-            android:textStyle="italic"
-            android:padding="5dp"
-            android:background="#f3cebe"/>
-
 
         <com.github.chrisbanes.photoview.PhotoView
-            android:id="@+id/imageView_postDetails"
+            android:id="@+id/imageView_panvidaExtended"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:background="#f3cebe"/>
-
 
     </LinearLayout>
 

@@ -36,7 +36,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class panividaFragment extends Fragment {
 
@@ -45,7 +47,9 @@ public class panividaFragment extends Fragment {
     DatabaseReference dRef;
     private ArrayList<String> imagesLinks;
     private ArrayList<String> titles;
-    private ArrayList<String> complexPanivida;
+    //private ArrayList<String> complexPanivida;
+
+    private Map<String, ArrayList<String>> complexPanividaMap;
 
     LinearLayoutManager panividaLinearLayoutManager;
     SharedPreferences panividaSharedPreferences;
@@ -55,7 +59,7 @@ public class panividaFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
-        return inflater.inflate(R.layout.fragment_panivida,container,false);
+        return inflater.inflate(R.layout.fragment_panivida, container, false);
     }
 
     @Override
@@ -77,16 +81,14 @@ public class panividaFragment extends Fragment {
 //        }
 
 
-
-
         panividaSharedPreferences = getActivity().getSharedPreferences("SortSettings", Context.MODE_PRIVATE);
-        String panividaSorting = panividaSharedPreferences.getString("Sort","Newest");
+        String panividaSorting = panividaSharedPreferences.getString("Sort", "Newest");
 
-        if(panividaSorting.equals("Newest")){
+        if (panividaSorting.equals("Newest")) {
             panividaLinearLayoutManager = new LinearLayoutManager(getActivity());
             panividaLinearLayoutManager.setReverseLayout(true);
             panividaLinearLayoutManager.setStackFromEnd(true);
-        }else if(panividaSorting.equals("Oldest")){
+        } else if (panividaSorting.equals("Oldest")) {
             panividaLinearLayoutManager = new LinearLayoutManager(getActivity());
             panividaLinearLayoutManager.setReverseLayout(false);
             panividaLinearLayoutManager.setStackFromEnd(false);
@@ -102,14 +104,20 @@ public class panividaFragment extends Fragment {
                 // initialize the array
                 imagesLinks = new ArrayList<String>();
                 titles = new ArrayList<String>();
-                complexPanivida=new ArrayList<String>();
-                for (DataSnapshot childSnapshot: dataSnapshot.getChildren()) {
+                complexPanividaMap = new HashMap<>();
+                for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
                     String imagesLink = childSnapshot.child("image").getValue(String.class);
                     imagesLinks.add(imagesLink);
                     String title_one = childSnapshot.child("title").getValue(String.class);
                     titles.add(title_one);
-                    if(childSnapshot.hasChild("images")){
-                        complexPanivida.add(childSnapshot.child("title").getValue().toString());
+                    if (childSnapshot.hasChild("images")) {
+                        String titleComplex =childSnapshot.child("title").getValue().toString();
+                        complexPanividaMap.put(titleComplex, new ArrayList<String>());
+                        long noOfImages = childSnapshot.child("images").getChildrenCount();
+
+                        for (int i = 1; i < noOfImages+1; i++) {
+                            complexPanividaMap.get(titleComplex).add(childSnapshot.child("images").child(String.valueOf(i)).getValue().toString());
+                        }
                     }
                 }
 
@@ -122,13 +130,12 @@ public class panividaFragment extends Fragment {
         });
 
 
-
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        FirebaseRecyclerAdapter<Model,ViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Model, ViewHolder>(
+        FirebaseRecyclerAdapter<Model, ViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Model, ViewHolder>(
                 Model.class,
                 R.layout.one_panivida,
                 ViewHolder.class,
@@ -136,26 +143,35 @@ public class panividaFragment extends Fragment {
         ) {
             @Override
             protected void populateViewHolder(ViewHolder viewHolder, Model model, int position) {
-                viewHolder.setDetail(getActivity(),model.title,model.getImage(), complexPanivida);
+                viewHolder.setDetail(getActivity(), model.title, model.getImage(), complexPanividaMap);
             }
 
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-                ViewHolder viewHolder = super.onCreateViewHolder(parent,viewType);
+                ViewHolder viewHolder = super.onCreateViewHolder(parent, viewType);
 
                 viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
 
+                        if (complexPanividaMap.containsKey(titles.get(position))) {
+                            Intent intent = new Intent(view.getContext(), extendedPanividaActivity.class);
+                            intent.putExtra("complexPanividaImages", complexPanividaMap.get(titles.get(position)));
+                            intent.putExtra("title", titles.get(position));
+                            startActivity(intent);
 
-                        Intent intent = new Intent(view.getContext(),PostDetailActivity.class);
-                        intent.putExtra("title","1");
-                        intent.putExtra("search",false);
-                        intent.putExtra("position",position);
-                        intent.putExtra("imageLinks",imagesLinks);
-                        intent.putExtra("titles",titles);
-                        startActivity(intent);
+                        } else {
+                            Intent intent = new Intent(view.getContext(), PostDetailActivity.class);
+                            intent.putExtra("title", "1");
+                            intent.putExtra("search", false);
+                            intent.putExtra("position", position);
+                            intent.putExtra("imageLinks", imagesLinks);
+                            HashMap<String, ArrayList<String>> complexPanividaImagesHashMap = new HashMap<>(complexPanividaMap);
+                            intent.putExtra("complexPanividaImagesHashMap",complexPanividaImagesHashMap);
+                            intent.putExtra("titles", titles);
+                            startActivity(intent);
+                        }
 
 
                     }
@@ -173,10 +189,10 @@ public class panividaFragment extends Fragment {
         panividaRecyclerView.setAdapter(firebaseRecyclerAdapter);
     }
 
-    private void firebaseSearch(String searchText){
-        Query firebaseSearchQuery = dRef.orderByChild("title").startAt(searchText).endAt(searchText+"\uf8ff");
+    private void firebaseSearch(String searchText) {
+        Query firebaseSearchQuery = dRef.orderByChild("title").startAt(searchText).endAt(searchText + "\uf8ff");
 
-        FirebaseRecyclerAdapter<Model,ViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Model, ViewHolder>(
+        FirebaseRecyclerAdapter<Model, ViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Model, ViewHolder>(
                 Model.class,
                 R.layout.one_panivida,
                 ViewHolder.class,
@@ -184,13 +200,13 @@ public class panividaFragment extends Fragment {
         ) {
             @Override
             protected void populateViewHolder(ViewHolder viewHolder, Model model, int position) {
-                viewHolder.setDetail(getActivity(),model.title,model.getImage(),complexPanivida);
+                viewHolder.setDetail(getActivity(), model.title, model.getImage(), complexPanividaMap);
             }
 
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-                ViewHolder viewHolder = super.onCreateViewHolder(parent,viewType);
+                ViewHolder viewHolder = super.onCreateViewHolder(parent, viewType);
 
                 viewHolder.setOnClickListener(new ViewHolder.ClickListener() {
                     @Override
@@ -202,22 +218,29 @@ public class panividaFragment extends Fragment {
 //                        Drawable panividaImageDR = panivida_IV.getDrawable();
 //
 //                        Bitmap bitmap = ((BitmapDrawable)panividaImageDR).getBitmap();
+                        if (complexPanividaMap.containsKey(titileSTR)) {
+                            Intent intent = new Intent(view.getContext(), extendedPanividaActivity.class);
+                            intent.putExtra("complexPanividaImages", complexPanividaMap.get(titileSTR));
+                            intent.putExtra("title", titileSTR);
+                            startActivity(intent);
 
-                        Intent intent = new Intent(view.getContext(),PostDetailActivity.class);
+                        } else {
+                            Intent intent = new Intent(view.getContext(), PostDetailActivity.class);
 //                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
 //                        bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
 //                        byte [] bytes = stream.toByteArray();
 
 
 //                        intent.putExtra("image",bytes);
-                        intent.putExtra("title",titileSTR);
-                        intent.putExtra("imageLinks",imagesLinks);
-                        intent.putExtra("search",true);
-                        intent.putExtra("position",position);
-                        intent.putExtra("titles",titles);
-                        startActivity(intent);
-
-
+                            intent.putExtra("title", titileSTR);
+                            intent.putExtra("imageLinks", imagesLinks);
+                            intent.putExtra("search", true);
+                            intent.putExtra("position", position);
+                            intent.putExtra("titles", titles);
+                            HashMap<String, ArrayList<String>> complexPanividaImagesHashMap = new HashMap<>(complexPanividaMap);
+                            intent.putExtra("complexPanividaImagesHashMap",complexPanividaImagesHashMap);
+                            startActivity(intent);
+                        }
 
                     }
 
@@ -240,7 +263,7 @@ public class panividaFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 
-        getActivity().getMenuInflater().inflate(R.menu.menu_search,menu);
+        getActivity().getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem item = menu.findItem(R.id.search_panivida);
         SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -276,23 +299,23 @@ public class panividaFragment extends Fragment {
     }
 
     private void showSortDialog() {
-        String sortOptions [] ={"Newest","Oldest"};
+        String sortOptions[] = {"Newest", "Oldest"};
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Sort by")
                 .setIcon(R.drawable.ic_action_sort)
                 .setItems(sortOptions, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        if(i==0){
+                        if (i == 0) {
 
                             SharedPreferences.Editor editor = panividaSharedPreferences.edit();
-                            editor.putString("Sort","Newest");
+                            editor.putString("Sort", "Newest");
                             editor.apply();
                             getActivity().recreate();
 
-                        }else if(i==1){
+                        } else if (i == 1) {
                             SharedPreferences.Editor editor = panividaSharedPreferences.edit();
-                            editor.putString("Sort","Oldest");
+                            editor.putString("Sort", "Oldest");
                             editor.apply();
                             getActivity().recreate();
 
