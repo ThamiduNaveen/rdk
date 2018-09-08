@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -27,12 +28,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -55,6 +59,8 @@ public class panividaFragment extends Fragment {
     SharedPreferences panividaSharedPreferences;
 
 
+
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -75,9 +81,22 @@ public class panividaFragment extends Fragment {
         dRef = fireDB.getReference("Data");
         dRef.keepSynced(true);
 
-//        for(int i =6;i<10;i++){
-//            dRef.child("0"+String.valueOf(i)).child("image").setValue("1");
-//            dRef.child("0"+String.valueOf(i)).child("title").setValue(String.valueOf(i)+" රිටිගලින් පණිවිඩයක්");
+
+ //       StorageReference storageRef = FirebaseStorage.getInstance().getReference();
+
+
+
+//        for(int i =229;i<300;i++){
+//            //dRef.child(String.valueOf(i)).child("image").setValue("1");
+//            //dRef.child(String.valueOf(i)).child("title").setValue(String.valueOf(i)+" රිටිගලින් පණිවිඩයක්");
+//            final int finalI = i;
+//            storageRef.child("ritigala_panivida/"+String.valueOf(i)+".jpg").getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                @Override
+//                public void onSuccess(Uri uri) {
+//                    // Got the download URL for 'users/me/profile.png'
+//                    dRef.child(String.valueOf(finalI)).child("image").setValue(uri.toString());
+//                }
+//            });
 //        }
 
 

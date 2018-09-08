@@ -1,5 +1,7 @@
 package com.ritigala.app.ritigala_dakma;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -27,6 +29,7 @@ import android.Manifest;
 
 
 import com.github.chrisbanes.photoview.PhotoView;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -54,11 +57,15 @@ public class PostDetailActivity extends AppCompatActivity {
     ArrayList<String> imagesLinks;
     ArrayList<String> titles;
 
+    private ProgressDialog loadingBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         downImg = new ImageView(this);
+
+
 
 //        requestWindowFeature(Window.FEATURE_NO_TITLE);
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -144,15 +151,15 @@ public class PostDetailActivity extends AppCompatActivity {
                         String[] permission = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
                         requestPermissions(permission, WRITE_EXTERNAL_STO_CODE);
                     } else {
-                        saveImage();
+                        saveImage(this);
                     }
                 } else {
-                    saveImage();
+                    saveImage(this);
                 }
 
                 return true;
             case R.id.postDetail_share:
-                ShareImage();
+                ShareImage(this);
 
                 return true;
             default:
@@ -162,73 +169,107 @@ public class PostDetailActivity extends AppCompatActivity {
 
     }
 
-    private void ShareImage() {
+    private void ShareImage(final Context context) {
+        loadingBar = new ProgressDialog(this);
+        loadingBar.setTitle("Loading");
+        loadingBar.setMessage("Please wait wile loading");
+        loadingBar.show();
 
-        Picasso.get().load(imagesLinks.get(viewPager.getCurrentItem())).into(downImg);
+        Picasso.get().load(imagesLinks.get(viewPager.getCurrentItem())).into(downImg, new Callback() {
+            @Override
+            public void onSuccess() {
+                loadingBar.dismiss();
+                try {
+                    panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
 
-        try {
-            panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
+                    try {
 
-            try {
-
-                File file = new File(getExternalCacheDir(), "sample.png");
-                FileOutputStream fOut = new FileOutputStream(file);
-                panividaBMP.compress(Bitmap.CompressFormat.PNG, 100, fOut);
-                fOut.flush();
-                fOut.close();
-                file.setReadable(true, false);
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.putExtra(Intent.EXTRA_TEXT, "ritigala dakma " + (viewPager.getCurrentItem() + 1));
-                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-                intent.setType("image/png");
-                startActivity(Intent.createChooser(intent, "Share via "));
+                        File file = new File(getExternalCacheDir(), "sample.jpeg");
+                        FileOutputStream fOut = new FileOutputStream(file);
+                        panividaBMP.compress(Bitmap.CompressFormat.JPEG, 80, fOut);
+                        fOut.flush();
+                        fOut.close();
+                        file.setReadable(true, false);
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.putExtra(Intent.EXTRA_TEXT, "ritigala dakma " + (viewPager.getCurrentItem() + 1));
+                        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                        intent.setType("image/jpeg");
+                        startActivity(Intent.createChooser(intent, "Share via "));
 
 
-            } catch (Exception e) {
+                    } catch (Exception e) {
 
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(context, "Check your internet connection", Toast.LENGTH_SHORT).show();
+                }
 
             }
-        } catch (Exception e) {
-            Toast.makeText(this, "Check your internet connection", Toast.LENGTH_SHORT).show();
-        }
+
+            @Override
+            public void onError(Exception e) {
+                loadingBar.dismiss();
+                Toast.makeText(context, "Error while loading images.. Try again", Toast.LENGTH_LONG).show();
+
+            }
+        });
+
+
 
     }
 
 
-    private void saveImage() {
+    private void saveImage(final Context context) {
+        loadingBar = new ProgressDialog(this);
+        loadingBar.setTitle("Loading");
+        loadingBar.setMessage("Please wait wile loading");
+        loadingBar.show();
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis());
         File path = Environment.getExternalStorageDirectory();
-        File dir = new File(path + "/Ritigala_dekma");
+        final File dir = new File(path + "/Ritigala_dekma");
 
         if (!dir.exists()) {
             dir.mkdir();
         }
-        String imgName = timeStamp + ".PNG";
-        File file = new File(dir, imgName);
-        OutputStream output;
+        final String imgName = timeStamp + ".jpeg";
+        final File file = new File(dir, imgName);
+        final OutputStream[] output = new OutputStream[1];
 
 
-        Picasso.get().load(imagesLinks.get(viewPager.getCurrentItem())).into(downImg);
-        try {
-            panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
-            try {
-                output = new FileOutputStream(file);
-                panividaBMP.compress(Bitmap.CompressFormat.PNG, 100, output);
-                output.flush();
-                output.close();
-                Toast.makeText(this, imgName + " saved to" + dir, Toast.LENGTH_SHORT).show();
+        Picasso.get().load(imagesLinks.get(viewPager.getCurrentItem())).into(downImg, new Callback() {
+            @Override
+            public void onSuccess() {
+                try {
+                    loadingBar.dismiss();
+                    panividaBMP = ((BitmapDrawable) downImg.getDrawable()).getBitmap();
+                    try {
+                        output[0] = new FileOutputStream(file);
+                        panividaBMP.compress(Bitmap.CompressFormat.JPEG, 80, output[0]);
+                        output[0].flush();
+                        output[0].close();
+                        Toast.makeText(context, imgName + " saved to" + dir, Toast.LENGTH_SHORT).show();
 
 
-            } catch (Exception e) {
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
 
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(context, "Check your internet connection", Toast.LENGTH_SHORT).show();
+                }
             }
-        } catch (Exception e) {
-            Toast.makeText(this, "Check your internet connection", Toast.LENGTH_SHORT).show();
-        }
+
+            @Override
+            public void onError(Exception e) {
+                loadingBar.dismiss();
+                Toast.makeText(context, "Error while loading images.. Try again", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
 
     }
@@ -238,7 +279,7 @@ public class PostDetailActivity extends AppCompatActivity {
         switch (requestCode) {
             case WRITE_EXTERNAL_STO_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    saveImage();
+                    saveImage(this);
                 } else {
                     Toast.makeText(this, "Enable permission to save image", Toast.LENGTH_SHORT).show();
                 }

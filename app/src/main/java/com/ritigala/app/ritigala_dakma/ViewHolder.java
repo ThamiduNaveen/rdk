@@ -105,14 +105,14 @@ public class ViewHolder extends RecyclerView.ViewHolder{
         // path to /data/data/yourapp/app_data/imageDir
         File directory = cw.getDir("panividaDir", Context.MODE_PRIVATE);
         // Create imageDir
-        File mypath=new File(directory,title+".png");
+        File mypath=new File(directory,title+".jpeg");
         boolean status=false;
 
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(mypath);
             // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            bitmapImage.compress(Bitmap.CompressFormat.JPEG, 80, fos);
             //Toast.makeText(ctx, "done "+title, Toast.LENGTH_SHORT).show();
             status=false;
         } catch (Exception e) {
@@ -137,7 +137,7 @@ public class ViewHolder extends RecyclerView.ViewHolder{
     {
 
         try {
-            File f=new File(path,title+".png");
+            File f=new File(path,title+".jpeg");
             Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
             img.setImageBitmap(b);
             //Toast.makeText(ctx, "Loaded from saved", Toast.LENGTH_SHORT).show();
