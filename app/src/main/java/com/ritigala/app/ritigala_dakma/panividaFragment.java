@@ -113,6 +113,7 @@ public class panividaFragment extends Fragment {
             panividaLinearLayoutManager.setStackFromEnd(false);
         }
 
+
         panividaRecyclerView.setLayoutManager(panividaLinearLayoutManager);
 
         dRef.addValueEventListener(new ValueEventListener() {
@@ -206,6 +207,7 @@ public class panividaFragment extends Fragment {
         };
 
         panividaRecyclerView.setAdapter(firebaseRecyclerAdapter);
+       // panividaRecyclerView.scrollToPosition(50);
     }
 
     private void firebaseSearch(String searchText) {
@@ -344,4 +346,5 @@ public class panividaFragment extends Fragment {
         builder.show();
 
     }
+
 }

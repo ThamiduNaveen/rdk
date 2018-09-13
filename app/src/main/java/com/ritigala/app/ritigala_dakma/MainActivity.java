@@ -92,6 +92,9 @@ public class MainActivity extends AppCompatActivity
             case R.id.ritigala_gallery:
                 frag = new panividaFragment();
                 break;
+            case R.id.ritigala_bavana:
+                frag = new bawanaFragment();
+                break;
         }
 
         if (frag != null) {
